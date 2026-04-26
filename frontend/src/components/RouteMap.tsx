@@ -13,6 +13,7 @@ import "leaflet/dist/leaflet.css";
 
 import type { PlanResponse, SegmentDTO } from "../lib/types";
 import { formatClock, formatHoursMinutes, shortLocation } from "../lib/format";
+import { useTheme } from "../lib/theme";
 
 
 const iconBase = "https://unpkg.com/leaflet@1.9.4/dist/images";
@@ -76,6 +77,18 @@ interface Stop {
 
 export function RouteMap({ data }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const { isDark } = useTheme();
+  const tile = isDark
+    ? {
+        url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      }
+    : {
+        url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      };
 
   const polylines = useMemo(() => {
     return data.legs
@@ -189,8 +202,9 @@ export function RouteMap({ data }: Props) {
             scrollWheelZoom
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              key={tile.url}
+              attribution={tile.attribution}
+              url={tile.url}
             />
             {polylines.map((p, i) => (
               <Polyline

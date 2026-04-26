@@ -20,3 +20,5 @@ services:
         sync: false
       - key: NOMINATIM_USER_AGENT
         value: "eld-trip-planner/1.0 (assessment)"
+      - key: LOCATIONIQ_API_KEY
+        sync: false

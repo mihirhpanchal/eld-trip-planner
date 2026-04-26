@@ -124,3 +124,8 @@ NOMINATIM_BASE_URL = config(
     "NOMINATIM_BASE_URL",
     default="https://nominatim.openstreetmap.org",
 )
+LOCATIONIQ_API_KEY = config("LOCATIONIQ_API_KEY", default="")
+LOCATIONIQ_BASE_URL = config(
+    "LOCATIONIQ_BASE_URL",
+    default="https://us1.locationiq.com/v1",
+)
