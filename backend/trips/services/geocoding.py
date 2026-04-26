@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 
 import requests
@@ -17,6 +18,10 @@ class GeoPoint:
     label: str
     lat: float
     lon: float
+
+
+_RETRY_ATTEMPTS = 3
+_BACKOFF_SECONDS = 1.0
 
 
 def geocode(query: str) -> GeoPoint:
@@ -36,11 +41,23 @@ def geocode(query: str) -> GeoPoint:
         "Accept-Language": "en",
     }
 
-    try:
-        resp = requests.get(url, params=params, headers=headers, timeout=15)
-        resp.raise_for_status()
-    except requests.RequestException as e:
-        raise GeocodingError(f"Geocoding service error: {e}") from e
+    last_error: Exception | None = None
+    for attempt in range(_RETRY_ATTEMPTS):
+        try:
+            resp = requests.get(url, params=params, headers=headers, timeout=15)
+            if resp.status_code == 429 and attempt < _RETRY_ATTEMPTS - 1:
+                time.sleep(_BACKOFF_SECONDS * (attempt + 1))
+                continue
+            resp.raise_for_status()
+            break
+        except requests.RequestException as e:
+            last_error = e
+            if attempt < _RETRY_ATTEMPTS - 1:
+                time.sleep(_BACKOFF_SECONDS * (attempt + 1))
+                continue
+            raise GeocodingError(f"Geocoding service error: {e}") from e
+    else:
+        raise GeocodingError(f"Geocoding service error: {last_error}")
 
     data = resp.json()
     if not data:
